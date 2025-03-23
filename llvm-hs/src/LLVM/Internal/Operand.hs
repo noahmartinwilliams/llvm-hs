@@ -465,6 +465,8 @@ instance DecodeM DecodeAST A.DICompileUnit (Ptr FFI.DICompileUnit) where
     macros <- decodeM =<< liftIO (FFI.getDICompileUnitMacros p)
     nameTableKind <- decodeM =<< liftIO (FFI.getDICompileUnitNameTableKind p)
     rangesBaseAddress <- decodeM =<< liftIO (FFI.getDICompileUnitRangesBaseAddress p)
+    sysroot <- decodeM =<< liftIO (FFI.getDICompileUnitSysroot p)
+    sdk <- decodeM =<< liftIO (FFI.getDICompileUnitSDK p)
     pure A.CompileUnit
       { A.language = language
       , A.file = file
@@ -484,6 +486,8 @@ instance DecodeM DecodeAST A.DICompileUnit (Ptr FFI.DICompileUnit) where
       , A.debugInfoForProfiling = debugInfoForProfiling
       , A.nameTableKind = nameTableKind
       , A.rangesBaseAddress = rangesBaseAddress
+      , A.sysroot = sysroot
+      , A.sdk = sdk
       }
 
 instance EncodeM EncodeAST A.DICompileUnit (Ptr FFI.DICompileUnit) where
@@ -506,13 +510,15 @@ instance EncodeM EncodeAST A.DICompileUnit (Ptr FFI.DICompileUnit) where
     debugInfoForProfiling <- encodeM debugInfoForProfiling
     nameTableKind <- encodeM nameTableKind
     rangesBaseAddress <- encodeM rangesBaseAddress
+    sysroot <- encodeM sysroot
+    sdk <- encodeM sdk
     Context c <- gets encodeStateContext
     liftIO $ FFI.getDICompileUnit
       c
       language file producer optimized flags
       runtimeVersion debugFileName emissionKind enums retainedTypes
       globals imports macros dwoid splitDebugInlining
-      debugInfoForProfiling nameTableKind rangesBaseAddress
+      debugInfoForProfiling nameTableKind rangesBaseAddress sysroot sdk
 
 instance EncodeM EncodeAST A.DIScope (Ptr FFI.DIScope) where
   encodeM (A.DIFile f) = FFI.upCast <$> (encodeM f :: EncodeAST (Ptr FFI.DIFile))
